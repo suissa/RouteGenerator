@@ -118,14 +118,9 @@ Nessa estrutura podemos ter uma infinidade de rotas a serem definidas para um ú
 Antes de pensar em automatizar definição das rotas, precisamos estabelecer um padrão para definição dessas rotas dentro dos `controllers`. Para isso vamos refatorar nosso `UserController` da seguinte forma.
 
 ```js
-var listUsers = (data, callback) => {
-    return callback(200, { 'usuarios' : 'Lista de usuarios'})
-}
+const listUsers = (data, callback) => callback(200, { 'usuarios' : 'Lista de usuarios'})
 
-var getUsers = (data, callback) => {
-
-    return callback(200,  data )
-}
+const getUsers = (data, callback) => callback(200,  data )
 
 module.exports = [
     {
@@ -144,7 +139,7 @@ Note que agora o nosso `module.exports` do `UserController` define suas rotas po
 
 Agora podemos pensar em automatizar a criação dessas rotas, utilizando o módulo `fs`, nativo do Node.
 ```js
-var fs = require('fs')
+const fs = require('fs')
 ```
 A partir do uso desse módulo, podemos fazer a leitura do conteúdo da pasta `controller` e identificar quais os `controllers` disponíveis. Algo como:
 
@@ -168,32 +163,32 @@ Agora que já conseguimos obter os arquivos, e executar uma lógica a cada um de
 
 
 ```js
-fs.readdir(__dirname + '/controller', (err, files) => {
+fs.readdir(__dirname + '/controller', (err, files) => 
   files.map((file) => {
     //Primeiro adicionamos o módulo
-	  var module = require("./controller/" + file)
+	  let module = require("./controller/" + file)
     //Esse módulo tem uma série de módulos internos que definimos para cada rota
     module.map((route, index) => {
       //Definimos todas as rotas definidas no nosso UserController
       router.set(route.path, route.method, (req, res, next) => {
           //Agora executamos a ação relativa à rota
-          module[index].action(req.params, (code, data) => {
+          module[index].action(req.params, (code, data) => 
             res.send(code, data)
-          })
+          )
       })
     })
   })
-})
+)
 
 ```
 Agora podemos remover a definição manual de rotas do nosso `index.js`, deixando ele assim.
 
 ```js
-var restify = require('restify')
-var router = require('restify-route')
-var fs = require('fs')
+const restify = require('restify')
+const router = require('restify-route')
+const fs = require('fs')
 
-var server = restify.createServer()
+const server = restify.createServer()
 
 router
 	.use(server)
@@ -223,21 +218,20 @@ server.listen(process.argv[2], () => {
 Para tornar nosso código reaproveitável, podemos criar um módulo para fazer esse carregamento.
 
 ```js
-module.exports = (path, router) => {
-    var fs = require('fs')
-    
-    fs.readdir(path, (err, files) => {
-        files.map((file) => {
-            var module = require(path + file)
-            module.map((route, index) => {
-            router.set(route.path, route.method, (req, res, next) => {
-                module[index].action(req.params, (code, data) => {
-                    res.send(code, data)
-                })
-            })
-            })
-        })
-    })
+const fs = require('fs')
+module.exports = (path, router) => 
+  fs.readdir(path, (err, files) => {
+      files.map((file) => {
+          var module = require(path + file)
+          module.map((route, index) => {
+          router.set(route.path, route.method, (req, res, next) => {
+              module[index].action(req.params, (code, data) => {
+                  res.send(code, data)
+              })
+          })
+          })
+      })
+  )
 }
 ```
 
